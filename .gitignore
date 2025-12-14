@@ -1,0 +1,67 @@
+# ------------------------------------------------------------
+# OS / editor noise
+# ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+*.swp
+*.swo
+*.bak
+*.tmp
+
+.idea/
+*.iml
+
+# VS Code: ignore workspace state, keep shareable settings optional
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# ------------------------------------------------------------
+# Python
+# ------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# ------------------------------------------------------------
+# Coverage / test artifacts
+# ------------------------------------------------------------
+.coverage
+coverage/
+htmlcov/
+test-results/
+
+# ------------------------------------------------------------
+# Local databases / uploads
+# ------------------------------------------------------------
+*.sqlite3
+*.db
+uploads/
+uploads_test/
+
+# ------------------------------------------------------------
+# Environment / secrets
+# ------------------------------------------------------------
+.env
+.env.*
+secrets.*
+*.pem
+*.key
+
+# ------------------------------------------------------------
+# Docker local overrides
+# ------------------------------------------------------------
+docker-compose.override.yml

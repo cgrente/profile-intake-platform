@@ -1,0 +1,39 @@
+# EditorConfig helps maintain consistent coding styles
+# across different editors and IDEs.
+# https://editorconfig.org/
+
+root = true
+
+# Global defaults
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Python-specific rules
+[*.py]
+indent_size = 4
+max_line_length = 100
+
+# TOML configuration files
+[*.toml]
+indent_size = 2
+
+# YAML files (GitHub Actions, Docker Compose)
+[*.yml]
+indent_size = 2
+[*.yaml]
+indent_size = 2
+
+# Markdown files
+# Do NOT trim trailing whitespace because it can
+# be meaningful for Markdown formatting
+[*.md]
+trim_trailing_whitespace = false
+
+# Shell scripts
+[*.sh]
+indent_size = 2
