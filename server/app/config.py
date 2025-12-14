@@ -12,6 +12,7 @@ Using BaseSettings allows:
 
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
     """
     Strongly-typed application settings.
