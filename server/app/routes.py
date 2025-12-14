@@ -197,7 +197,7 @@ def process_submission(submission_id: str) -> None:
         if submission is None:
             return
 
-        submission.status = "COMPLETED" # type: ignore[assignment]
+        submission.status = "COMPLETED"  # type: ignore[assignment]
         db.commit()
     finally:
         db.close()
