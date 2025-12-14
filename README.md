@@ -1,3 +1,5 @@
+![Profile Intake Platform](docs/resources/github-preview.png)
+
 # Profile Intake Platform
 
 The **Profile Intake Platform** is a small, production-shaped monorepo that demonstrates
