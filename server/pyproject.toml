@@ -58,7 +58,7 @@ select = ["E", "F", "I", "B", "UP"]
 
 # Ignore line-length warnings to avoid noisy diffs.
 # Formatting is still enforced via `ruff format`.
-ignore = ["E501"]
+ignore = ["E501", "B008"]
 
 # Mypy configuration for static type checking.
 # This setup aims for strong signal without excessive friction.

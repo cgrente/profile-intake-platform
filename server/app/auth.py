@@ -6,6 +6,7 @@ used by FastAPI routes to enforce Bearer token access.
 """
 
 from fastapi import Header, HTTPException
+
 from .config import settings
 
 

@@ -14,6 +14,7 @@ Design goals:
 
 import json
 import os
+
 import typer
 
 from intake_client.client import IntakeClient
@@ -47,9 +48,7 @@ def get_client() -> IntakeClient:
     if not token:
         # Typer-specific exception to produce a clean CLI error message
         # instead of a Python traceback.
-        raise typer.BadParameter(
-            "Missing INTAKE_API_TOKEN environment variable"
-        )
+        raise typer.BadParameter("Missing INTAKE_API_TOKEN environment variable")
 
     return IntakeClient(base_url=base_url, token=token)
 

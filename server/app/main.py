@@ -12,9 +12,8 @@ It intentionally contains no business logic.
 
 from fastapi import FastAPI
 
-from .routes import router
 from .database import Base, engine
-
+from .routes import router
 
 # Create all database tables on application startup.
 #
