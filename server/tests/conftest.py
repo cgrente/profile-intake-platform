@@ -66,19 +66,19 @@ def client(test_env):
     and mirrors how the app would start in a fresh process.
     """
     # Import modules explicitly so they can be reloaded
-    import app.config
-    import app.database
-    import app.main
+    import app.config as app_config
+    import app.database as app_database
+    import app.main as app_main
 
     # Reload modules to force re-evaluation of environment-based settings
-    importlib.reload(app.config)
-    importlib.reload(app.database)
-    importlib.reload(app.main)
+    importlib.reload(app_config)
+    importlib.reload(app_database)
+    importlib.reload(app_main)
 
     # Import the FastAPI application instance after reload
-    from app.main import app  # noqa: E402
+    from app.main import app as fastapi_app  # noqa: E402
 
-    return TestClient(app)
+    return TestClient(fastapi_app)
 
 
 @pytest.fixture()

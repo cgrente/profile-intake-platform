@@ -59,4 +59,4 @@ class Settings(BaseSettings):
 
 # Instantiate settings at import time so configuration
 # is loaded once and shared across the application.
-settings = Settings()
+settings = Settings() # type: ignore[call-arg]
