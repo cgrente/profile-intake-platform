@@ -8,7 +8,7 @@ focused on data structure rather than business logic.
 
 import uuid
 
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Boolean, Column, String
 
 from .database import Base
 

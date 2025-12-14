@@ -105,9 +105,7 @@ class IntakeClient:
         Returns:
             Parsed JSON response representing the updated submission.
         """
-        response = self.session.post(
-            f"{self.base_url}/submissions/{submission_id}/submit"
-        )
+        response = self.session.post(f"{self.base_url}/submissions/{submission_id}/submit")
         response.raise_for_status()
         return response.json()
 
@@ -122,8 +120,6 @@ class IntakeClient:
             Parsed JSON response containing the submission status
             and associated metadata.
         """
-        response = self.session.get(
-            f"{self.base_url}/submissions/{submission_id}"
-        )
+        response = self.session.get(f"{self.base_url}/submissions/{submission_id}")
         response.raise_for_status()
         return response.json()

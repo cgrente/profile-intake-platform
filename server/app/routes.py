@@ -6,14 +6,18 @@ Routes are intentionally kept thin: they handle request/response
 concerns and delegate business logic to other layers where possible.
 """
 
+from __future__ import annotations
+
 import os
 import shutil
 import time
+from collections.abc import Generator
 
-from fastapi import APIRouter, Depends, UploadFile, File, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from .auth import require_auth
+from .config import settings
 from .database import SessionLocal
 from .models import Profile, Submission
 
@@ -22,7 +26,7 @@ from .models import Profile, Submission
 router = APIRouter(prefix="/api/v1")
 
 
-def get_db():
+def get_db() -> Generator[Session, None, None]:
     """
     Database session dependency.
 
@@ -36,11 +40,28 @@ def get_db():
         db.close()
 
 
+def _ensure_pdf_upload(file: UploadFile) -> None:
+    """
+    Validate that the uploaded file is a PDF.
+
+    We validate both the reported MIME type and the filename extension.
+    Neither is perfect alone, but together they significantly reduce
+    accidental non-PDF uploads without requiring heavy content inspection.
+    """
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+
+    filename = file.filename or ""
+    _, ext = os.path.splitext(filename)
+    if ext.lower() != ".pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+
+
 @router.post("/profiles")
 def create_profile(
     payload: dict,
-    db: Session = Depends(get_db),
-    _=Depends(require_auth),
+    db: Session = Depends(get_db),  # noqa: B008
+    _: None = Depends(require_auth),  # noqa: B008
 ):
     """
     Create a new profile.
@@ -53,6 +74,7 @@ def create_profile(
     profile = Profile(**payload)
     db.add(profile)
     db.commit()
+    db.refresh(profile)  # ensures generated fields (id) are available
 
     return profile
 
@@ -61,33 +83,40 @@ def create_profile(
 def upload_submission(
     profile_id: str,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    _=Depends(require_auth),
+    db: Session = Depends(get_db),  # noqa: B008
+    _: None = Depends(require_auth),  # noqa: B008
 ):
     """
-    Upload a document associated with a profile.
+    Upload a PDF document associated with a profile.
 
     Only PDF files are accepted. A new Submission entity is created
     with an initial status of `UPLOADED`.
     """
-    # Enforce server-side validation of file type.
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    # Validate profile exists
+    profile = db.get(Profile, profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    _ensure_pdf_upload(file)
 
     submission = Submission(
         profile_id=profile_id,
         filename=file.filename,
+        status="UPLOADED",
+        locked=False,
     )
     db.add(submission)
     db.commit()
+    db.refresh(submission)
 
     # Persist the uploaded file to disk using the submission ID
     # as a stable, collision-free filename.
-    os.makedirs("uploads", exist_ok=True)
-    file_path = f"uploads/{submission.id}.pdf"
+    os.makedirs(settings.upload_dir, exist_ok=True)
+    file_path = os.path.join(settings.upload_dir, f"{submission.id}.pdf")
 
-    with open(file_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+    # Copy file stream to disk
+    with open(file_path, "wb") as out_file:
+        shutil.copyfileobj(file.file, out_file)
 
     return submission
 
@@ -96,8 +125,8 @@ def upload_submission(
 def submit(
     submission_id: str,
     bg: BackgroundTasks,
-    db: Session = Depends(get_db),
-    _=Depends(require_auth),
+    db: Session = Depends(get_db),  # noqa: B008
+    _: None = Depends(require_auth),  # noqa: B008
 ):
     """
     Submit an uploaded document for processing.
@@ -106,13 +135,21 @@ def submit(
     asynchronous processing. Re-submission is not allowed.
     """
     submission = db.get(Submission, submission_id)
+    if submission is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
 
     if submission.locked:
-        raise ValueError("Submission has already been submitted")
+        raise HTTPException(status_code=409, detail="Submission has already been submitted")
 
-    submission.locked = True
-    submission.status = "PROCESSING"
+    # NOTE: If your SQLAlchemy models are declared using `Column(...)` without
+    # SQLAlchemy 2.0 `Mapped[...]` typing, mypy may treat attributes as `Column[T]`.
+    # These assignments are correct at runtime; the ignores keep type-checking green
+    # until models are migrated to `Mapped[...]`.
+    submission.locked = True  # type: ignore[assignment]
+    submission.status = "PROCESSING"  # type: ignore[assignment]
+
     db.commit()
+    db.refresh(submission)
 
     # Trigger asynchronous processing without blocking
     # the HTTP request lifecycle.
@@ -124,8 +161,8 @@ def submit(
 @router.get("/submissions/{submission_id}")
 def status(
     submission_id: str,
-    db: Session = Depends(get_db),
-    _=Depends(require_auth),
+    db: Session = Depends(get_db),  # noqa: B008
+    _: None = Depends(require_auth),  # noqa: B008
 ):
     """
     Retrieve the current status of a submission.
@@ -133,10 +170,13 @@ def status(
     Returns the full submission resource, including its
     lifecycle status and metadata.
     """
-    return db.get(Submission, submission_id)
+    submission = db.get(Submission, submission_id)
+    if submission is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    return submission
 
 
-def process_submission(submission_id: str):
+def process_submission(submission_id: str) -> None:
     """
     Background task to process a submission.
 
@@ -154,7 +194,10 @@ def process_submission(submission_id: str):
     db = SessionLocal()
     try:
         submission = db.get(Submission, submission_id)
-        submission.status = "COMPLETED"
+        if submission is None:
+            return
+
+        submission.status = "COMPLETED"  # type: ignore[assignment]
         db.commit()
     finally:
         db.close()
