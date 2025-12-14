@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import shutil
 import time
-from typing import Generator
+from collections.abc import Generator
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
