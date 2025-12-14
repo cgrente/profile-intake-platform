@@ -1,0 +1,79 @@
+# Project metadata for the Profile Intake API server.
+# This file defines runtime dependencies, development tooling,
+# and configuration for linting, typing, and testing.
+[project]
+name = "profile-intake-server"
+version = "0.1.0"
+
+# Enforce a modern Python runtime.
+# Python 3.12 is aligned with local development, Docker,
+# and CI to ensure consistency across environments.
+requires-python = ">=3.12"
+
+# Runtime dependencies required by the API server.
+# Versions are specified with minimum bounds to allow
+# non-breaking updates while remaining stable.
+dependencies = [
+  "fastapi>=0.110",                 # Web framework and request handling
+  "uvicorn[standard]>=0.27",        # ASGI server with production extras
+  "sqlalchemy>=2.0",                # ORM and database abstraction
+  "python-multipart>=0.0.9",        # File upload support
+  "pydantic>=2.6",                  # Data validation and settings
+  "pydantic-settings>=2.2",         # Environment-based configuration
+]
+
+# Optional dependency groups.
+# The `dev` group contains tools used only during development,
+# testing, and CI, and is not required in production containers.
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",                     # Test runner
+  "httpx>=0.27",                     # HTTP client for integration tests
+  "ruff>=0.6",                       # Linting and formatting
+  "mypy>=1.10",                      # Static type checking
+  "types-requests>=2.32.0.20240907" # Type hints for requests (test usage)
+]
+
+# Pytest configuration.
+# Centralized here to avoid separate config files
+# and keep all tooling configuration in one place.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"   # Quiet output for cleaner CI logs
+
+# Ruff configuration.
+# Ruff is used as a fast, unified replacement for
+# flake8, isort, and black-style formatting.
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+# Enable a focused set of linting rules:
+# - E/F: core Python errors
+# - I: import sorting
+# - B: common bug patterns
+# - UP: modern Python syntax upgrades
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+# Ignore line-length warnings to avoid noisy diffs.
+# Formatting is still enforced via `ruff format`.
+ignore = ["E501"]
+
+# Mypy configuration for static type checking.
+# This setup aims for strong signal without excessive friction.
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+
+# Allow gradual typing while still checking untyped functions.
+disallow_untyped_defs = false
+check_untyped_defs = true
+
+# Avoid implicit Optional types for clearer APIs.
+no_implicit_optional = true
+
+# Ignore missing stubs for third-party libraries
+# to prevent false positives in CI.
+ignore_missing_imports = true

@@ -1,0 +1,66 @@
+# Project metadata for the Profile Intake CLI client.
+# This defines how the client is packaged, installed, and executed.
+[project]
+name = "profile-intake-client"
+version = "0.1.0"
+
+# Enforce a modern Python baseline.
+# Python 3.12 is fully supported by all dependencies and aligns
+# with current backend best practices.
+requires-python = ">=3.12"
+
+# Runtime dependencies required for the client to function.
+# Keep this list minimal to reduce installation overhead.
+dependencies = [
+  "requests>=2.32",
+]
+
+# Optional dependency groups.
+# The `dev` group is intended for local development, testing,
+# linting, and type checking, but is not required at runtime.
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",                         # Unit testing framework
+  "ruff>=0.6",                           # Linting + formatting
+  "mypy>=1.10",                          # Static type checking
+  "types-requests>=2.32.0.20240907",     # Type hints for requests
+  "typer>=0.12",                         # CLI framework
+]
+
+# Pytest configuration.
+# Centralizing this here avoids separate pytest.ini files
+# and keeps tooling configuration in one place.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"   # Quiet output for cleaner CI logs
+
+# Ruff configuration.
+# Ruff is used for both formatting and linting to keep the
+# toolchain fast and simple.
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+# Enable a focused set of linting rules:
+# - E/F: core Python errors
+# - I: import sorting
+# - B: common bug patterns
+# - UP: modern Python upgrades
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+# Ignore line-length warnings to avoid noisy diffs.
+ignore = ["E501"]
+
+# Mypy configuration for static type checking.
+# This setup favors practicality over strictness for a client SDK.
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+ignore_missing_imports = true
+
+# Console script entry point.
+# This allows the CLI to be invoked as a standalone command:
+#   intake <command>
+[project.scripts]
+intake = "intake_client.cli:main"
