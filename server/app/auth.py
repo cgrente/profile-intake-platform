@@ -5,35 +5,35 @@ This module provides request-level authentication dependencies
 used by FastAPI routes to enforce Bearer token access.
 """
 
-from fastapi import Header, HTTPException
+from __future__ import annotations
+
+from fastapi import HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from .config import settings
 
+_bearer_scheme = HTTPBearer(auto_error=False)
 
-def require_auth(authorization: str = Header(...)):
+
+def require_auth(
+    credentials: HTTPAuthorizationCredentials | None = Security(_bearer_scheme),
+) -> None:
     """
     Enforce Bearer token authentication on protected endpoints.
 
-    This dependency validates the `Authorization` header against
-    the expected API token configured via environment variables.
-
-    Design notes:
-    - Authentication is kept intentionally simple (static Bearer token)
-      to reduce operational complexity for this service.
-    - The check is centralized here to ensure consistent behavior
-      across all protected routes.
-    - This function is designed to be used as a FastAPI dependency
-      (`Depends(require_auth)`).
-
-    Args:
-        authorization: Value of the HTTP Authorization header.
-
-    Raises:
-        HTTPException: 401 Unauthorized if the token is missing or invalid.
+    - Uses FastAPI's Security() + HTTPBearer so OpenAPI/Swagger reflects auth correctly.
+    - Returns 401 with a WWW-Authenticate header, which is standard for Bearer auth.
     """
-    expected = f"Bearer {settings.api_token}"
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    # Perform a strict comparison against the expected Bearer token.
-    # Any mismatch results in an immediate authentication failure.
-    if authorization != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    if credentials.credentials != settings.api_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
