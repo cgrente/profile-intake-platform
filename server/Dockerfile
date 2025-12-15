@@ -20,7 +20,8 @@ RUN pip install --no-cache-dir \
     fastapi \
     uvicorn \
     sqlalchemy \
-    python-multipart
+    python-multipart \
+    pydantic-settings
 
 # Copy the application source code into the container.
 COPY app app
