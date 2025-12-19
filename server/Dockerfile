@@ -21,7 +21,8 @@ RUN pip install --no-cache-dir \
     uvicorn \
     sqlalchemy \
     python-multipart \
-    pydantic-settings
+    pydantic-settings \
+    email-validator
 
 # Copy the application source code into the container.
 COPY app app

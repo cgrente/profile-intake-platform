@@ -1,81 +1,51 @@
 """
 Pytest fixtures for the Profile Intake API.
-
-This module defines shared test fixtures responsible for:
-- configuring an isolated test environment
-- setting environment variables before app import
-- providing a FastAPI test client
-- supplying authenticated request headers
-
-The fixtures are designed to keep tests deterministic,
-fast, and independent of external state.
 """
 
+from __future__ import annotations
+
 import importlib
-import os
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 
-@pytest.fixture(scope="session")
-def test_env(tmp_path_factory: pytest.TempPathFactory):
+@pytest.fixture()
+def test_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """
-    Configure environment variables for the test session.
-
-    This fixture:
-    - creates a temporary directory for test artifacts
-    - provisions a temporary SQLite database
-    - sets a dedicated upload directory
-    - injects environment variables BEFORE the application is imported
-
-    Using a session-scoped fixture ensures:
-    - consistent configuration across all tests
-    - minimal filesystem setup overhead
+    Function scope => every test gets its own temp dir + its own SQLite DB.
     """
-    tmp_dir = tmp_path_factory.mktemp("profile_intake_test")
+    db_path = tmp_path / "test.db"
 
-    # Temporary database path for this test session
-    db_path = tmp_dir / "test.db"
-
-    # Temporary upload directory for file-related tests
-    upload_dir = tmp_dir / "uploads"
+    upload_dir = tmp_path / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
 
-    # Configure environment variables expected by the application
-    os.environ["API_TOKEN"] = "test-token"
-    os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
-    os.environ["UPLOAD_DIR"] = str(upload_dir)
+    monkeypatch.setenv("API_TOKEN", "test-token")
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_path}")
+    monkeypatch.setenv("UPLOAD_DIR", str(upload_dir))
 
-    return {
-        "db_path": db_path,
-        "upload_dir": upload_dir,
-    }
+    return {"db_path": db_path, "upload_dir": upload_dir}
 
 
 @pytest.fixture()
 def client(test_env):
     """
-    Provide a FastAPI TestClient instance.
-
-    The application modules are explicitly reloaded AFTER environment
-    variables are set to ensure that Pydantic settings and database
-    configuration are picked up correctly.
-
-    This pattern avoids configuration leakage between test runs
-    and mirrors how the app would start in a fresh process.
+    Reload config/database/routes/main so routes re-import the fresh get_db + SessionLocal.
     """
-    # Import modules explicitly so they can be reloaded
     import app.config as app_config
     import app.database as app_database
     import app.main as app_main
+    import app.models as app_models
+    import app.routes as app_routes
 
-    # Reload modules to force re-evaluation of environment-based settings
+    # Order matters: config -> database -> models -> routes -> main
     importlib.reload(app_config)
     importlib.reload(app_database)
+    importlib.reload(app_models)
+    importlib.reload(app_routes)
     importlib.reload(app_main)
 
-    # Import the FastAPI application instance after reload
     from app.main import app as fastapi_app  # noqa: E402
 
     return TestClient(fastapi_app)
@@ -83,10 +53,4 @@ def client(test_env):
 
 @pytest.fixture()
 def auth_headers():
-    """
-    Provide Authorization headers for authenticated requests.
-
-    This fixture centralizes authentication configuration so
-    individual tests do not need to duplicate header logic.
-    """
     return {"Authorization": "Bearer test-token"}
