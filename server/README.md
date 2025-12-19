@@ -3,17 +3,24 @@
 The **Profile Intake Server** is a FastAPI-based backend service that owns the full
 profile submission and document intake workflow.
 
-It provides:
-- authenticated REST APIs
-- profile creation
-- PDF upload and validation
-- submission lifecycle management
-- asynchronous processing simulation
-- persistent storage via SQLAlchemy
-- full test coverage and CI support
+This service is intentionally designed to resemble a **real internal API service**:
+it owns all business rules, state transitions, and persistence, while clients and
+CLI tools remain thin and reusable.
 
-This service is designed to demonstrate **API ownership**, **workflow modeling**,
-and **production-shaped backend architecture**.
+---
+
+## What This Service Does
+
+- Authenticated REST APIs
+- Profile creation
+- PDF upload and validation
+- Submission lifecycle management
+- Asynchronous processing simulation
+- Persistent storage via SQLAlchemy
+- Full test coverage and CI support
+
+This server exists to demonstrate **API ownership**, **workflow modeling**, and
+**production-shaped backend architecture**.
 
 ---
 
@@ -24,13 +31,15 @@ and **production-shaped backend architecture**.
 - **Uvicorn** – ASGI server
 - **SQLAlchemy 2.x** – ORM
 - **Pydantic v2** – validation & settings
-- **SQLite** – local persistence
+- **SQLite** – local persistence (swappable)
 - **Pytest** – testing
+- **Ruff** – linting & formatting
+- **Mypy** – static typing
 - **Docker** – containerization
 
 ---
 
-## Architecture Overview
+## Project Structure
 
 ```
 app/
@@ -45,8 +54,8 @@ app/
 └── main.py        # Application entrypoint
 ```
 
-Business rules live in the server.  
-Clients and CLI tools are intentionally thin.
+All **business rules live in the server**.  
+Clients and the CLI never encode workflow logic.
 
 ---
 
@@ -76,7 +85,7 @@ Returns:
 POST /api/v1/profiles
 ```
 
-Creates a new profile.
+Creates a new profile entity.
 
 ### Submissions
 
@@ -86,9 +95,9 @@ POST /api/v1/submissions/{id}/submit
 GET  /api/v1/submissions/{id}
 ```
 
-Manages document uploads and submission lifecycle.
+Handles document upload and submission lifecycle transitions.
 
-Full endpoint documentation is available in:
+Full API documentation:
 ```
 docs/api.md
 ```
@@ -97,7 +106,7 @@ docs/api.md
 
 ## Authentication
 
-All API endpoints (except `/healthz`) require a Bearer token.
+All API endpoints (except `/healthz`) require a Bearer token:
 
 ```
 Authorization: Bearer <API_TOKEN>
@@ -109,23 +118,29 @@ The token is configured via environment variables.
 
 ## Configuration
 
-The server is configured entirely via environment variables.
+The server is configured **entirely via environment variables**.
 
-Example:
+Typical configuration:
 
-```bash
-API_TOKEN=dev-token
+```env
+API_TOKEN=dev-token-change-me
 DATABASE_URL=sqlite:///./data.db
 UPLOAD_DIR=./uploads
 ```
 
-A sample configuration is provided in `.env.example`.
+A full example is provided in:
+
+```
+.env.example
+```
+
+> When running via Docker or `make`, the **root `.env` file is the single source of truth**.
 
 ---
 
 ## Running Locally
 
-### Using Python
+### Without Docker
 
 ```bash
 cd server
@@ -133,11 +148,17 @@ pip install -e ".[dev]"
 uvicorn app.main:app --reload
 ```
 
-### Using Docker
+Server will be available at:
+
+```
+http://localhost:8000
+```
+
+### With Docker
 
 ```bash
 docker build -t profile-intake-server .
-docker run -p 8000:8000 profile-intake-server
+docker run --env-file ../.env -p 8000:8000 profile-intake-server
 ```
 
 ---
@@ -150,12 +171,14 @@ Run the full test suite:
 pytest
 ```
 
-Tests include:
-- authentication enforcement
-- health endpoint
-- file validation
-- full submission workflow
-- async processing behavior
+Tests cover:
+
+- Authentication enforcement
+- Health endpoint
+- PDF validation
+- Full submission workflow
+- Asynchronous processing behavior
+- Database isolation per test
 
 ---
 
@@ -163,18 +186,19 @@ Tests include:
 
 - Explicit workflow modeling
 - Server-owned business logic
-- Minimal client assumptions
 - Environment-driven configuration
-- Test-first development
-- Production-shaped structure
+- Deterministic, isolated tests
+- Minimal but realistic architecture
+- No unnecessary infrastructure
 
 ---
 
 ## Notes
 
 - Asynchronous processing is simulated using FastAPI background tasks
-- SQLite is used for portability; can be replaced with PostgreSQL easily
-- Schema migrations are intentionally omitted for simplicity
+- SQLite is used for portability and ease of review
+- The storage layer can be replaced with PostgreSQL with minimal changes
+- Schema migrations are intentionally omitted to keep scope focused
 
 ---
 

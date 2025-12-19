@@ -3,7 +3,7 @@
 # Profile Intake Platform
 
 The **Profile Intake Platform** is a small, production-shaped monorepo that demonstrates
-**API ownership**, **workflow modeling**, and **end‑to‑end backend development**.
+**API ownership**, **workflow modeling**, and **end-to-end backend development**.
 
 It includes:
 - a FastAPI backend that owns business logic and data
@@ -13,6 +13,11 @@ It includes:
 - Docker-based local development
 
 This repository is intentionally scoped to remain clear, explicit, and easy to reason about.
+
+> **Configuration note**  
+> The root `.env` file is the **single source of truth** for configuration.  
+> It is used consistently by Docker, local development, and the FastAPI server
+> via **Pydantic Settings**.
 
 ---
 
@@ -108,6 +113,12 @@ curl http://localhost:8000/healthz
 
 ## Local Development (without Docker)
 
+### Requirements
+
+- Python **3.12+**
+- pip
+- make
+
 ### Install dependencies
 
 ```bash
@@ -141,6 +152,13 @@ export INTAKE_API_TOKEN=dev-token-change-me
 intake status <submission_id>
 ```
 
+> **Authentication note**  
+> - The server uses `API_TOKEN`  
+> - The client and CLI use `INTAKE_API_TOKEN`
+>
+> This separation allows the client to target different environments
+> without coupling directly to server-side configuration.
+
 See:
 - `client/README.md`
 
@@ -155,12 +173,21 @@ This repository uses:
 - **Mypy** for static typing
 - **GitHub Actions** for CI
 
-Run all checks locally:
+Run the full quality gate locally:
 
 ```bash
 make check
-make test
 ```
+
+---
+
+## Why this project exists
+
+This repository is **not a demo or tutorial**.
+
+It is designed to showcase how I structure, document, test, and operate
+a small but realistic backend service end-to-end, with clear ownership,
+explicit boundaries, and production-shaped workflows.
 
 ---
 
@@ -172,9 +199,6 @@ make test
 - Clear separation of concerns
 - Testability first
 - Avoid unnecessary infrastructure
-
-This project is intentionally designed to resemble a real internal service,
-without introducing complexity that does not serve the core problem.
 
 ---
 

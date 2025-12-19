@@ -24,17 +24,22 @@ Desktop.ini
 # ------------------------------------------------------------
 __pycache__/
 *.py[cod]
+
+# Packaging / build artifacts
 *.egg-info/
 dist/
 build/
+
+# Tool caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 
-# Virtual environments
+# Virtual environments (root + server)
 .venv/
 venv/
 env/
+server/.venv/
 
 # ------------------------------------------------------------
 # Coverage / test artifacts
@@ -45,18 +50,18 @@ htmlcov/
 test-results/
 
 # ------------------------------------------------------------
-# Local databases / uploads
+# Local databases / uploads (runtime artifacts)
 # ------------------------------------------------------------
+server/.data/
 *.sqlite3
 *.db
-uploads/
-uploads_test/
 
 # ------------------------------------------------------------
 # Environment / secrets
 # ------------------------------------------------------------
 .env
 .env.*
+!.env.example
 secrets.*
 *.pem
 *.key

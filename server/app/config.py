@@ -10,7 +10,12 @@ Using BaseSettings allows:
 - centralized configuration management
 """
 
-from pydantic_settings import BaseSettings
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+ROOT_DIR = Path(__file__).resolve().parents[2]  # .../profile-intake-platform
+ENV_FILE = ROOT_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -24,6 +29,13 @@ class Settings(BaseSettings):
     Defaults are chosen to support local development while
     remaining production-safe when overridden.
     """
+
+    # Pydantic configuration for loading from a `.env` file.
+    model_config = SettingsConfigDict(
+        env_file=str(ENV_FILE),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     # API authentication token used for Bearer auth
     api_token: str

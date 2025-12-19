@@ -20,6 +20,7 @@ dependencies = [
   "python-multipart>=0.0.9",        # File upload support
   "pydantic>=2.6",                  # Data validation and settings
   "pydantic-settings>=2.2",         # Environment-based configuration
+  "email-validator>=2.0",           # Email address validation
 ]
 
 # Optional dependency groups.

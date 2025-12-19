@@ -98,7 +98,7 @@ docker-up-d: ## Start services with docker compose (detached)
 	docker compose up --build -d
 
 .PHONY: docker-down
-docker-down: ## Stop servicesgi
+docker-down: ## Stop services
 	docker compose down
 
 .PHONY: docker-logs

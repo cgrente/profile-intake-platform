@@ -7,7 +7,8 @@ This package provides:
 - a command-line interface (`intake`) for common workflows
 - environment-based configuration (no hardcoded secrets)
 
-The client is designed to be simple, explicit, and suitable for scripting, automation, and integration into other tools.
+The client is intentionally **thin by design**.  
+All business rules, validation, and workflow state transitions are owned by the server.
 
 ---
 
@@ -57,6 +58,8 @@ export INTAKE_API_URL=http://localhost:8000/api/v1
 
 If `INTAKE_API_URL` is not set, the client defaults to a local server.
 
+When used inside the monorepo, the root `.env` file is the canonical source of configuration.
+
 ---
 
 ## SDK Usage
@@ -93,7 +96,11 @@ The CLI is exposed as the `intake` command.
 ### Create a profile
 
 ```bash
-intake create-profile   --first-name John   --last-name Smith   --email john.smith@test.com   --github-url github.com/johnsmith
+intake create-profile \
+  --first-name John \
+  --last-name Smith \
+  --email john.smith@test.com \
+  --github-url github.com/johnsmith
 ```
 
 ### Upload a PDF document
@@ -114,7 +121,7 @@ intake submit <submission_id>
 intake status <submission_id>
 ```
 
-All commands output formatted JSON by default.
+All commands output structured JSON by default, making them suitable for scripting and automation.
 
 ---
 
@@ -129,8 +136,8 @@ pytest
 ### Lint and format
 
 ```bash
-ruff format .
 ruff check .
+ruff format .
 ```
 
 ### Type checking
@@ -143,7 +150,7 @@ mypy .
 
 ## Design Notes
 
-- The client intentionally contains **no business logic**
+- The client contains **no business logic**
 - All validation and workflow rules are enforced by the server
 - The CLI is a thin wrapper around the SDK
 - HTTP sessions are reused for efficiency
